@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,8 @@ namespace monalisa
     public partial class Form1 : Form
     {
         bool working = false;
+        int sizepic = 480;
+        int pixels;
 
         public Form1()
         {
@@ -54,10 +57,38 @@ namespace monalisa
             working = true;
             Random random = new Random();
             uint attempts = (uint)numericUpDown1.Value;
+            int sizepic = (int)numSize.Value;
+            int pixels = (int)numPixels.Value;
+            int sp = sizepic / pixels;
+
+            foreach (PictureBox pb in panel1.Controls.OfType<PictureBox>().ToList())//delete all pixels
+            {
+                panel1.Controls.Remove(pb);
+                pb.Dispose();
+            }
+            int xpos = 0;
+            int ypos = 0;
+            for (int i = 0; i != pixels; i++)//create pixels
+            {
+                for (int j = 0; j != pixels; j++)
+                {
+                    PictureBox pb = new PictureBox();
+                    pb.Name = i.ToString();
+                    pb.Size = new Size(sp, sp);
+                    pb.Location = new Point(xpos, ypos);
+                    //Color randomColor = Color.FromArgb(random.Next(256), random.Next(256), random.Next(256));
+                    pb.BackColor = Color.Black;
+                    panel1.Controls.Add(pb);
+                    xpos += sp;
+                }
+                xpos = 0;
+                ypos += sp;
+            }
+
             for (uint i = 0; i != attempts; i++)
             {
                 Bitmap miniImage = new Bitmap(120, 120);
-                Bitmap maxImage = new Bitmap(480, 480);
+                Bitmap maxImage = new Bitmap(sizepic, sizepic);
                 foreach (PictureBox pb in panel1.Controls)
                 {
                     Color randomColor = Color.FromArgb(random.Next(256), random.Next(256), random.Next(256));
@@ -72,15 +103,16 @@ namespace monalisa
                     foreach (PictureBox pb in panel1.Controls)
                     {
                         Color color = pb.BackColor;
+                        int sizep = 120 / pixels;
 
-                        g.FillRectangle(new SolidBrush(color), x, y, 10, 10);
+                        g.FillRectangle(new SolidBrush(color), x, y, sizep, sizep);
 
-                        x += 10;
+                        x += sizep;
 
                         if (x >= 120)
                         {
                             x = 0;
-                            y += 10;
+                            y += sizep;
                         }
                     }
                 }
@@ -94,14 +126,14 @@ namespace monalisa
                     {
                         Color color = pb.BackColor;
 
-                        g.FillRectangle(new SolidBrush(color), x, y, 40, 40);
+                        g.FillRectangle(new SolidBrush(color), x, y, sp, sp);
 
-                        x += 40;
+                        x += sp;
 
-                        if (x >= 480)
+                        if (x >= sizepic)
                         {
                             x = 0;
-                            y += 40;
+                            y += sp;
                         }
                     }
                 }
@@ -141,7 +173,7 @@ namespace monalisa
             Form newForm = new Form
             {
                 Text = "Picture",
-                Size = new Size(480, 480)
+                Size = new Size(sizepic, sizepic)
             };
 
             PictureBox pictureBox = new PictureBox
@@ -170,7 +202,7 @@ namespace monalisa
         {
             using (SaveFileDialog saveDialog = new SaveFileDialog())
             {
-                saveDialog.Filter = "Image PNG (*.png)|*.png|Image JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|All files (*.*)|*.*";
+                saveDialog.Filter = "Image PNG (*.png)|*.png|Image JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg";
                 saveDialog.FilterIndex = 1;
 
                 if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -186,7 +218,8 @@ namespace monalisa
                             imageFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();//
+                            MessageBox.Show("Invalid format", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
                     }
 
                     image.Save(saveDialog.FileName, imageFormat);
@@ -203,6 +236,17 @@ namespace monalisa
                 working = false;
                 button2.Enabled = true;
             }
+        }
+
+        private void numSize_ValueChanged(object sender, EventArgs e)
+        {
+            textBox1.Text = numSize.Value.ToString();
+            numPixels.Maximum = (int)numSize.Value;
+        }
+
+        private void numPixels_ValueChanged(object sender, EventArgs e)
+        {
+            
         }
     }
 }
